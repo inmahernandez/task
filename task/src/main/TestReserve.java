@@ -24,22 +24,26 @@ public class TestReserve {
 				c.voidEval("leafTest <- leaf[-train.ind,]");
 				
 				//Create first function, which trains a classifier based on the training sample
-			/*	c.voidEval("trainingFunction<-function(){ \n" +
+				c.voidEval("trainingFunction<-function(){ \n" +
 						"xTrain <- leafTrain[,-1]\n" + 
 						"yTrain <- as.factor(leafTrain$Class)\n" +
-						"model <- train(xTrain,yTrain,'nb', trControl=trainControl(method='cv',number=10))\n}");
-				*/
+						"model <- train(xTrain,yTrain,'nb', trControl=trainControl(method='cv',number=10))\n"
+						+ "return (model)}\n");
 				
+				//Create second function, which applies the previously created model to
+				//classify further instances
 				c.voidEval("testingFunction<-function(testSet){\n "
 						+ "xTest = testSet[,-1]\n"
 						+ "yTest = as.factor(testSet$Class)\n" +
 						"predict(model$finalModel,xTest)\n" + 
-						"predict(model$finalModel,xTest)$class}\n");
+						"result <- predict(model$finalModel,xTest)$class\n"
+						+ "return (result)}");
 				
-				//try {
+				try {
 					//Call functions to test program
-				//	c.eval("trainingFunction()");
-					REXP output = c.eval("testingFunction(leafTest)");
+					REXP x = c.eval("model=trainingFunction()");
+					c.eval("result <- testingFunction(leafTest)");
+					REXP output = c.eval("result");
 					System.out.println("Classifier output:");
 					/*for(String s: output)
 						System.out.println(s);*/
@@ -47,8 +51,10 @@ public class TestReserve {
 			/*	} catch (REXPMismatchException e) {
 					System.err.println("Error parsing the output: " + e.getMessage());
 				/*} catch (REngineException e) {
-					System.err.println("Error parsing the output: " + e.getMessage());
-				}*/
+					System.err.println("Error parsing the output: " + e.getMessage());*/
+				} catch(Exception ex) {
+					ex.printStackTrace();
+				}
 				c.close();
     }
 }
