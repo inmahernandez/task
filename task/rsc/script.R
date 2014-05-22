@@ -30,3 +30,4 @@ return (result)
 #calls to both functions to test their functionalities
 model <- trainingFunction()
 result <- testingFunction(leafTest)
+result

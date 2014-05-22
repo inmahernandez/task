@@ -1,15 +1,18 @@
 package main;
 
-import org.rosuda.REngine.REXP;
+import java.util.Iterator;
+
 import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.RList;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
-public class TestReserve {
+public class TaskRserve {
     public static void main(String[] args) throws RserveException {
        
             	// make a new local connection on default port (6311)
 				RConnection c = new RConnection();
+			
 				
 				//load libraries
 				c.voidEval("library(\"klaR\")\n");
@@ -24,37 +27,34 @@ public class TestReserve {
 				c.voidEval("leafTest <- leaf[-train.ind,]");
 				
 				//Create first function, which trains a classifier based on the training sample
-				c.voidEval("trainingFunction<-function(){ \n" +
-						"xTrain <- leafTrain[,-1]\n" + 
-						"yTrain <- as.factor(leafTrain$Class)\n" +
-						"model <- train(xTrain,yTrain,'nb', trControl=trainControl(method='cv',number=10))\n"
+				c.eval("trainingFunction<-function(){ \n" +
+						"xTrain = leafTrain[,-1]\n" + 
+						"yTrain = as.factor(leafTrain$Class)\n" +
+						"model <- train(xTrain, yTrain, 'nb')\n"
 						+ "return (model)}\n");
 				
 				//Create second function, which applies the previously created model to
 				//classify further instances
-				c.voidEval("testingFunction<-function(testSet){\n "
+				c.eval("testingFunction<-function(testSet){\n "
 						+ "xTest = testSet[,-1]\n"
 						+ "yTest = as.factor(testSet$Class)\n" +
 						"predict(model$finalModel,xTest)\n" + 
 						"result <- predict(model$finalModel,xTest)$class\n"
 						+ "return (result)}");
 				
-				try {
 					//Call functions to test program
-					REXP x = c.eval("model=trainingFunction()");
+					c.eval("model<-trainingFunction()");
 					c.eval("result <- testingFunction(leafTest)");
-					REXP output = c.eval("result");
-					System.out.println("Classifier output:");
-					/*for(String s: output)
-						System.out.println(s);*/
+					try {
+						RList output = c.eval("result").asList();
+						System.out.println("Classifier output:");
+						Iterator it = output.iterator();
+						while(it.hasNext())
+							System.out.println(it.next().toString());
+					} catch (REXPMismatchException e) {
+						System.err.println("Error outputting results: " + e.getMessage());
+					}
 						
-			/*	} catch (REXPMismatchException e) {
-					System.err.println("Error parsing the output: " + e.getMessage());
-				/*} catch (REngineException e) {
-					System.err.println("Error parsing the output: " + e.getMessage());*/
-				} catch(Exception ex) {
-					ex.printStackTrace();
-				}
 				c.close();
     }
 }

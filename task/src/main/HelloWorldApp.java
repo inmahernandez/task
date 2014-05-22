@@ -25,7 +25,7 @@ public class HelloWorldApp {
 
             REXP x;
             System.out.println("Reading script...");
-            File file = new File("rsc/classifier.R");
+            File file = new File("rsc/script.R");
             try(BufferedReader br = new BufferedReader(new FileReader(file))) {
                 for(String line; (line = br.readLine()) != null; ) {
                     System.out.println(line);
